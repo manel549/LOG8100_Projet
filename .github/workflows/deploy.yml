@@ -40,7 +40,7 @@ jobs:
 
     # Optional: Security Tests (e.g., Trivy)
     - name: Run Security Tests
-      uses: aquasecurity/trivy-action@v0.7.0
+      uses: aquasecurity/trivy-action@v0.28.0
       with:
         scan-type: fs
         severity: HIGH,CRITICAL
