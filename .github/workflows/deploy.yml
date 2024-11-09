@@ -25,10 +25,13 @@ jobs:
       run: |
         mkdir -p ~/.kube
         echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
-
-    # Export KUBECONFIG path
-    - name: Export KUBECONFIG
-      run: export KUBECONFIG=~/.kube/config
+        export KUBECONFIG=~/.kube/config
+        
+    # Ensure kubectl uses the correct KUBECONFIG
+    - name: Verify Kubeconfig
+      run: |
+        kubectl config view
+        kubectl get nodes  # Check if cluster is accessible
 
     # Initialize and apply Terraform configuration
     - name: Terraform Init and Apply
