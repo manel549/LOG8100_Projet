@@ -14,12 +14,13 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # Set up Terraform (optional: if using for infrastructure)
+    # Set up Terraform
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_version: 1.5.7
 
+    # Initialize and apply Terraform configuration
     - name: Terraform Init and Apply
       run: |
         cd terraform
@@ -38,7 +39,7 @@ jobs:
         kubectl apply -f kubernetes/deployment.yml
         kubectl apply -f kubernetes/service.yml
 
-    # Optional: Security Tests (e.g., Trivy)
+    # Run security tests using Trivy
     - name: Run Security Tests
       uses: aquasecurity/trivy-action@master
       with:
