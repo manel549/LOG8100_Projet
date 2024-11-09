@@ -32,8 +32,8 @@ jobs:
 
     - name: Deploy to AKS
       run: |
-        kubectl apply -f deployment.yml -n webgoat
-        kubectl apply -f service.yml -n webgoat
+        kubectl apply -f WebGoat-main/kubernetes/deployment.yml -n webgoat
+        kubectl apply -f WebGoat-main/kubernetes/service.yml -n webgoat
         
     - name: Check pods status
       run: kubectl get pods -n webgoat
