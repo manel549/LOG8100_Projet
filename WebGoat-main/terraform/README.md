@@ -1,114 +1,137 @@
-## Infrastructure Setup with Terraform
+
+## Infrastructure Setup with Terraform for WebGoat Deployment
 
 ### Prerequisites
 
-1. Install required tools:
-```bash
-# Install Terraform
-brew install terraform
+1. **Install Required Tools**:
+   Ensure the following tools are installed and properly configured:
 
-# Install Docker Desktop (if not already installed)
-brew install --cask docker
+   ```bash
+   # Install Terraform
+   brew install terraform
 
-# Enable Kubernetes in Docker Desktop
-# Open Docker Desktop -> Settings -> Kubernetes -> Enable Kubernetes
-```
+   # Install Docker Desktop (if not already installed)
+   brew install --cask docker
 
-2. Verify installations:
-```bash
-terraform version
-kubectl version
-docker version
-```
+   # Enable Kubernetes in Docker Desktop
+   # Open Docker Desktop -> Settings -> Kubernetes -> Enable Kubernetes
+   ```
+
+2. **Verify Installations**:
+   Confirm that the necessary tools are installed and operational:
+   ```bash
+   terraform version
+   kubectl version --client
+   docker version
+   ```
+
+---
 
 ### Infrastructure Deployment
 
-1. Initialize Terraform:
-```bash
-cd terraform
-terraform init
-```
+1. **Navigate to the Terraform Directory**:
+   ```bash
+   cd terraform
+   ```
 
-2. Plan the deployment:
-```bash
-terraform plan -out=tfplan
-```
+2. **Initialize Terraform**:
+   Initialize Terraform to download the required providers and modules:
+   ```bash
+   terraform init
+   ```
 
-3. Apply the configuration:
-```bash
-terraform apply tfplan
-```
+3. **Plan the Deployment**:
+   Generate a detailed execution plan to verify changes:
+   ```bash
+   terraform plan -out=tfplan
+   ```
+
+4. **Apply the Configuration**:
+   Deploy the infrastructure using Terraform:
+   ```bash
+   terraform apply tfplan
+   ```
+
+---
 
 ### Infrastructure Components
 
-The Terraform configuration creates:
+The Terraform configuration deploys the following resources:
 
-1. **Namespace Configuration**
-   - Dedicated namespace for WebGoat
-   - Resource quotas
-   - Network policies
+1. **Namespace Configuration**:
+   - A dedicated namespace (`webgoat`) for the WebGoat application.
+   - Resource quotas to manage CPU, memory, and pod limits.
 
-2. **Security Setup**
-   - RBAC configuration
-   - Service accounts
-   - Network policies
-   - Pod security policies
+2. **Security Features**:
+   - **RBAC Configuration**: Role-based access control for namespaces and pods.
+   - **Service Accounts**: Isolated service account for the WebGoat deployment.
+   - **Network Policies**: Policies to control ingress and egress traffic for pods.
 
-3. **Resource Management**
-   - CPU and memory limits
-   - Storage configuration
-   - Namespace quotas
+3. **Application Deployment**:
+   - A `Deployment` resource to manage WebGoat application pods.
+   - A `Service` to expose the WebGoat application on port `8080`.
 
-### Security Features
+4. **Resource Quotas and Limits**:
+   - Limits for CPU and memory usage per pod and namespace.
+   - Restrictions on the number of pods allowed in the namespace.
 
-1. **Network Security**
-   - Isolated namespace
-   - Ingress/egress restrictions
-   - Pod-to-pod communication rules
+---
 
-2. **Access Control**
-   - Role-based access control (RBAC)
-   - Service account restrictions
-   - Minimal permissions principle
+### Accessing WebGoat
 
-3. **Resource Controls**
-   - CPU/memory quotas
-   - Pod count limits
-   - Storage restrictions
+1. **Using `kubectl port-forward`**:
+   Forward the WebGoat service to your local machine to access it:
+   ```bash
+   kubectl port-forward -n webgoat svc/webgoat-service 8080:8080
+   ```
+   Access the application in your browser at [http://localhost:8080](http://localhost:8080).
+
+2. **Verify Deployment**:
+   Check the status of the pods and services:
+   ```bash
+   # List pods
+   kubectl get pods -n webgoat
+
+   # Check services
+   kubectl get services -n webgoat
+   ```
+
+---
 
 ### Customization
 
-You can customize the deployment by modifying the variables in `terraform.tfvars`:
-
+You can tailor the deployment by modifying the `terraform.tfvars` file:
 ```hcl
 environment = "development"
 namespace   = "webgoat"
 resource_limits = {
-  cpu    = "4"
-  memory = "8Gi"
+  cpu    = "1"
+  memory = "1Gi"
 }
 ```
 
+---
+
 ### Cleanup
 
-To destroy the infrastructure:
+To destroy all resources and clean up the environment:
 ```bash
 terraform destroy
 ```
 
+---
+
 ### Best Practices Implemented
 
-1. **Resource Management**
-   - Defined resource quotas
-   - Limited pod counts
-   - Storage class configuration
+1. **Resource Management**:
+   - Defined CPU and memory limits for efficient usage.
+   - Enforced resource quotas for namespace isolation.
 
-2. **Security**
-   - Network policies
-   - RBAC configuration
-   - Service account restrictions
+2. **Security Enhancements**:
+   - Role-based access control (RBAC) for secure access.
+   - Network policies to restrict traffic within the namespace.
+   - Service accounts with minimal permissions.
 
-3. **Isolation**
-   - Namespace separation
-   - Resource quotas
-   - Network segmentation
+3. **Application Isolation**:
+   - Deployed WebGoat in a dedicated namespace.
+   - Segregated resources to avoid cross-environment interference.
