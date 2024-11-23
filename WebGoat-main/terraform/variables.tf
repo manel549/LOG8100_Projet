@@ -18,7 +18,7 @@ variable "resource_limits" {
     memory = string
   })
   default = {
-    cpu    = "4"
-    memory = "8Gi"
+    cpu    = "1"
+    memory = "1Gi"
   }
 }

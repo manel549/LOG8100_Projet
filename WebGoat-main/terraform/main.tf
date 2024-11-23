@@ -1,4 +1,3 @@
-# main.tf
 terraform {
   required_providers {
     kubernetes = {
@@ -13,14 +12,17 @@ terraform {
 }
 
 provider "kubernetes" {
-  config_path = "~/.kube/config"
+  config_path    = "~/.kube/config"
+  config_context = "docker-desktop"
 }
 
 provider "helm" {
   kubernetes {
-    config_path = "~/.kube/config"
+    config_path    = "~/.kube/config"
+    config_context = "docker-desktop"
   }
 }
+
 
 # Create namespace with resource quotas
 resource "kubernetes_namespace" "webgoat" {
@@ -41,17 +43,15 @@ resource "kubernetes_resource_quota" "webgoat" {
 
   spec {
     hard = {
-      "requests.cpu"    = "2"   # CPU demandée maximum
-      "requests.memory" = "2Gi" # Mémoire demandée maximum
-      "limits.cpu"      = "4"   # Limite CPU maximum
-      "limits.memory"   = "4Gi" # Limite mémoire maximum
-      "pods"            = "10"  # Nombre de pods maximum
+      "requests.cpu"    = "2"
+      "requests.memory" = "2Gi"
+      "limits.cpu"      = "4"
+      "limits.memory"   = "4Gi"
+      "pods"            = "10"
     }
   }
 }
 
-
-# Network policy
 resource "kubernetes_network_policy" "webgoat" {
   metadata {
     name      = "${var.namespace}-network-policy"
@@ -83,7 +83,6 @@ resource "kubernetes_network_policy" "webgoat" {
   }
 }
 
-# Service Account
 resource "kubernetes_service_account" "webgoat" {
   metadata {
     name      = "${var.namespace}-sa"
@@ -91,7 +90,6 @@ resource "kubernetes_service_account" "webgoat" {
   }
 }
 
-# Role
 resource "kubernetes_role" "webgoat" {
   metadata {
     name      = "${var.namespace}-role"
@@ -105,7 +103,6 @@ resource "kubernetes_role" "webgoat" {
   }
 }
 
-# Role Binding
 resource "kubernetes_role_binding" "webgoat" {
   metadata {
     name      = "${var.namespace}-role-binding"
@@ -125,10 +122,9 @@ resource "kubernetes_role_binding" "webgoat" {
   }
 }
 
-# Storage Class
 resource "kubernetes_storage_class" "standard" {
   metadata {
-    name = "standard"
+    name = "webgoat-storage"
   }
   storage_provisioner = "kubernetes.io/no-provisioner"
   reclaim_policy     = "Retain"
@@ -165,11 +161,11 @@ resource "kubernetes_deployment" "webgoat_app" {
           }
           resources {
             requests = {
-              cpu    = "500m" # 0.5 CPU
+              cpu    = "500m"
               memory = "512Mi"
             }
             limits = {
-              cpu    = "1" # 1 CPU
+              cpu    = "1"
               memory = "1Gi"
             }
           }
@@ -179,9 +175,6 @@ resource "kubernetes_deployment" "webgoat_app" {
   }
 }
 
-
-
-# Service
 resource "kubernetes_service" "webgoat_service" {
   metadata {
     name      = "${var.namespace}-service"
