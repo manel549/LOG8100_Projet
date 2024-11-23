@@ -29,7 +29,9 @@ jobs:
     # Build and push Docker image
     - name: Build Docker image
       run: |
-        docker build -t webgoat/webgoat-8.0 .
+        ls -la  # List files to verify path
+        cd WebGoat-main  # Change to WebGoat-main directory
+        docker build -t webgoat/webgoat-8.0 -f Dockerfile .
         # If you want to push to a registry, add docker login and push commands here
 
     # Set up Kubernetes config
@@ -54,15 +56,14 @@ jobs:
     # Initialize and apply Terraform
     - name: Terraform Init and Apply
       run: |
-        cd terraform
+        cd WebGoat-main/terraform  # Update path
         terraform init
-        # Add Terraform variables if needed
         terraform apply -auto-approve
 
     # Deploy to Kubernetes
     - name: Deploy to Kubernetes
       run: |
-        cd kubernetes
+        cd WebGoat-main/kubernetes  # Update path
         kubectl apply -f deployment.yml
         kubectl apply -f service.yml
         
