@@ -8,11 +8,42 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
     # Checkout the repository code
     - name: Checkout Code
       uses: actions/checkout@v3
+
+    # Run security tests using Trivy first
+    - name: Run Security Tests
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: fs
+        severity: HIGH,CRITICAL
+        ignore-unfixed: true
+        format: 'table'
+
+    # Set up Docker
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    # Build and push Docker image
+    - name: Build Docker image
+      run: |
+        docker build -t webgoat/webgoat-8.0 .
+        # If you want to push to a registry, add docker login and push commands here
+
+    # Set up Kubernetes config
+    - name: Set up Kubeconfig
+      run: |
+        mkdir -p ~/.kube
+        echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
+        chmod 600 ~/.kube/config
+      
+    # Verify Kubernetes connection
+    - name: Verify Kubernetes Connection
+      run: |
+        kubectl cluster-info
+        kubectl get nodes
 
     # Set up Terraform
     - name: Set up Terraform
@@ -20,41 +51,29 @@ jobs:
       with:
         terraform_version: 1.5.7
 
-    # Set up Kubeconfig
-    - name: Set up Kubeconfig
-      run: |
-        mkdir -p ~/.kube
-        echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
-        export KUBECONFIG=~/.kube/config
-        
-    # Ensure kubectl uses the correct KUBECONFIG
-    - name: Verify Kubeconfig
-      run: |
-        kubectl config view
-        kubectl get nodes  # Check if cluster is accessible
-
-    # Initialize and apply Terraform configuration
+    # Initialize and apply Terraform
     - name: Terraform Init and Apply
       run: |
-        cd WebGoat-main/terraform
+        cd terraform
         terraform init
+        # Add Terraform variables if needed
         terraform apply -auto-approve
-
-    # Set up kubectl
-    - name: Set up Kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'v1.31.2'  # Ensure this matches your cluster version
 
     # Deploy to Kubernetes
     - name: Deploy to Kubernetes
       run: |
-        kubectl apply -f WebGoat-main/kubernetes/deployment.yml
-        kubectl apply -f WebGoat-main/kubernetes/service.yml
+        cd kubernetes
+        kubectl apply -f deployment.yml
+        kubectl apply -f service.yml
+        
+    # Verify deployment
+    - name: Verify Deployment
+      run: |
+        kubectl get pods -n webgoat
+        kubectl get services -n webgoat
+        kubectl get deployments -n webgoat
 
-    # Run security tests using Trivy
-    - name: Run Security Tests
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: fs
-        severity: HIGH,CRITICAL
+    # Optional: Add deployment check
+    - name: Check Deployment Status
+      run: |
+        kubectl wait --for=condition=available deployment/webgoat -n webgoat --timeout=300s
